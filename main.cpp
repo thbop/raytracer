@@ -18,6 +18,7 @@ int main() {
     camera.aspect_ratio    = 16.0 / 9.0;
     camera.imageWidth      = 400;
     camera.samplesPerPixel = 100;
+    camera.maxBounces      = 50;
 
     camera.render("out.ppm", world);
 

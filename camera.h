@@ -8,6 +8,7 @@ public:
     double aspect_ratio    = 1.0;
     int    imageWidth      = 100;
     int    samplesPerPixel = 10;
+    int    maxBounces      = 10;
 
     void render( const char* filename, const Hittable& world ) {
         initialize();
@@ -20,7 +21,7 @@ public:
                 color pixelColor(0,0,0);
                 for ( int sample = 0; sample < samplesPerPixel; sample++ ) {
                     ray r = getRay(i, j);
-                    pixelColor += rayColor(r, world);
+                    pixelColor += rayColor(r, maxBounces, world);
                 }
                 writeColor( imageFile, pixelSampleScale * pixelColor );
             }
@@ -76,10 +77,13 @@ private:
         return vec3( random_double() -0.5, random_double() - 0.5, 0 );
     }
 
-    color rayColor(const ray& r, const Hittable& world) {
+    color rayColor(const ray& r, int depth, const Hittable& world) {
+        if (depth <= 0) return color(0,0,0);
+
         HitRecord rec;
-        if ( world.hit(r, interval(0, infinity), rec) ) {
-            return 0.5 * ( rec.normal + color(1,1,1) );
+        if ( world.hit(r, interval(0.001, infinity), rec) ) {
+            vec3 dir = random_on_hemisphere(rec.normal);
+            return color(0.3,0.5,0.3) * rayColor( ray(rec.p, dir), depth-1, world );
         }
 
         vec3 dirNormal = normalize(r.dir);
