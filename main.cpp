@@ -1,27 +1,13 @@
-#include <iostream>
-#include <fstream>
+#include "core.h"
+#include "hittable.h"
+#include "hittableList.h"
+#include "sphere.h"
 
-#include "vec3.h"
-#include "color.h"
-#include "ray.h"
 
-double hitSphere( const point3& center, double radius, const ray& r ) {
-    vec3 oc = center - r.o;
-    auto a = dot(r.dir, r.dir);
-    auto b = -2.0 * dot(r.dir, oc);
-    auto c = dot(oc, oc) - radius*radius;
-    auto discriminant = b*b - 4*a*c;
-    
-    if ( discriminant < 0 ) return -1.0;
-    else                    return (-b - std::sqrt(discriminant)) / (2.0*a); // Solve for t
-    
-}
-
-color rayColor(const ray& r) {
-    auto t = hitSphere( point3(0, 0, -1), 0.5, r );
-    if ( t > 0.0 ) {
-        vec3 N = normalize(r.at(t) - vec3(0, 0, -1));
-        return 0.5*color(N.x()+1, N.y()+1, N.z()+1);
+color rayColor(const ray& r, const Hittable& world) {
+    HitRecord rec;
+    if ( world.hit(r, 0, infinity, rec) ) {
+        return 0.5 * ( rec.normal + color(1,1,1) );
     }
 
     vec3 dirNormal = normalize(r.dir);
@@ -37,6 +23,12 @@ int main() {
 
     std::ofstream imageFile("out.ppm");
     imageFile << "P3\n" << imageWidth << " " << imageHeight << "\n255\n";
+
+    // World
+    HittableList world;
+
+    world.add( make_shared<Sphere>(point3(0,0,-1), 0.5) );
+    world.add( make_shared<Sphere>(point3(0,-100.5,-1), 100) );
 
     // Camera stuff
     constexpr auto focalLength = 1.0;
@@ -62,7 +54,7 @@ int main() {
             auto rayDir = pixelCenter - cameraCenter;
             ray r( cameraCenter, rayDir );
 
-            auto pixelColor = rayColor(r);
+            auto pixelColor = rayColor(r, world);
             writeColor(imageFile, pixelColor);
         }
     }
