@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "hittable.h"
 #include "hittableList.h"
+#include "material.h"
 #include "sphere.h"
 
 
@@ -9,8 +10,13 @@ int main() {
     // World
     HittableList world;
 
-    world.add( make_shared<Sphere>(point3(0,0,-1), 0.5) );
-    world.add( make_shared<Sphere>(point3(0,-100.5,-1), 100) );
+    auto material_blue   = make_shared<Lambertian>(color(0.3, 0.7, 0.7));
+    auto material_gold   = make_shared<Metal>     (color(0.3, 0.3, 0.1), 0.0);
+    auto material_mirror = make_shared<Metal>     (color(1.0, 1.0, 1.0), 0.4);
+
+    world.add( make_shared<Sphere>(point3(0.5,0,-1), 0.5, material_mirror) );
+    world.add( make_shared<Sphere>(point3(-0.5,0,-1), 0.5, material_mirror) );
+    world.add( make_shared<Sphere>(point3(0,-100.5,-1), 100, material_blue) );
 
     // Camera
     Camera camera;

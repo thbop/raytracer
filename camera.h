@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "hittable.h"
+#include "material.h"
 
 class Camera {
 public:
@@ -82,8 +83,12 @@ private:
 
         HitRecord rec;
         if ( world.hit(r, interval(0.001, infinity), rec) ) {
-            vec3 dir = rec.normal + random_normal();
-            return 0.5 * rayColor( ray(rec.p, dir), depth-1, world );
+            ray scattered;
+            color attenuation;
+            if ( rec.mat->scatter( r, rec, attenuation, scattered ) )
+                return attenuation * rayColor( scattered, depth-1, world );
+
+            return color(0,0,0);
         }
 
         vec3 dirNormal = normalize(r.dir);
