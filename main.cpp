@@ -15,8 +15,9 @@ int main() {
     // Camera
     Camera camera;
 
-    camera.imageWidth = 400;
-    camera.aspect_ratio = 16.0 / 9.0;
+    camera.aspect_ratio    = 16.0 / 9.0;
+    camera.imageWidth      = 400;
+    camera.samplesPerPixel = 100;
 
     camera.render("out.ppm", world);
 
