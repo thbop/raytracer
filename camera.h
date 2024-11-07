@@ -82,8 +82,8 @@ private:
 
         HitRecord rec;
         if ( world.hit(r, interval(0.001, infinity), rec) ) {
-            vec3 dir = random_on_hemisphere(rec.normal);
-            return color(0.3,0.5,0.3) * rayColor( ray(rec.p, dir), depth-1, world );
+            vec3 dir = rec.normal + random_normal();
+            return 0.5 * rayColor( ray(rec.p, dir), depth-1, world );
         }
 
         vec3 dirNormal = normalize(r.dir);
