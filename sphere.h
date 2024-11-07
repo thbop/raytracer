@@ -7,7 +7,7 @@ class Sphere : public Hittable {
 public:
     Sphere(const point3& center, double radius) : center(center), radius(std::fmax(0,radius)) {};
 
-    bool hit( const ray& r, double raytmin, double raytmax, HitRecord& rec ) const override {
+    bool hit( const ray& r, interval ray_t, HitRecord& rec ) const override {
         vec3 oc = center - r.o;
         auto a = r.dir.length_squared();
         auto h = dot(r.dir, oc);
@@ -19,9 +19,9 @@ public:
         auto sqrtd = std::sqrt(discriminant);
 
         auto root = (h - sqrtd) / a;
-        if ( root <= raytmin || raytmax <= root ) {
+        if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
-            if ( root <= raytmin || raytmax <= root ) return false;
+            if (!ray_t.surrounds(root)) return false;
         }
 
         rec.t      = root;
