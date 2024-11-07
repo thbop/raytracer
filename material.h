@@ -8,6 +8,8 @@ public:
     virtual ~Material() = default;
 
     virtual bool scatter( const ray& r_in, const HitRecord& rec, color& attenuation, ray& scattered ) const { return false; }
+
+    virtual color emitted() const { return color(0,0,0); }
 };
 
 class Lambertian : public Material {
@@ -41,5 +43,17 @@ private:
     color albedo;
     double fuzz; // Roughness
 };
+
+class Emission : public Material {
+public:
+    Emission(const color& emit) : emit(emit) {}
+
+    color emitted() const { return emit; }
+
+private:
+    color emit;
+};
+
+
 
 #endif

@@ -10,6 +10,7 @@ public:
     int    imageWidth      = 100;
     int    samplesPerPixel = 10;
     int    maxBounces      = 10;
+    color  background      = color(0,0,0);
 
     void render( const char* filename, const Hittable& world ) {
         initialize();
@@ -46,7 +47,7 @@ private:
         center = point3(0,0,0);
 
         // Viewport stuff
-        auto focalLength = 1.0;
+        auto focalLength = 2.0;
         auto viewportHeight = 2.0;
         auto viewportWidth = viewportHeight * ((double)imageWidth / imageHeight);
 
@@ -82,18 +83,25 @@ private:
         if (depth <= 0) return color(0,0,0);
 
         HitRecord rec;
-        if ( world.hit(r, interval(0.001, infinity), rec) ) {
-            ray scattered;
-            color attenuation;
-            if ( rec.mat->scatter( r, rec, attenuation, scattered ) )
-                return attenuation * rayColor( scattered, depth-1, world );
+        if ( !world.hit(r, interval(0.001, infinity), rec) ) 
+            return background;
+            // Or sky color
+            // vec3 dirNormal = normalize(r.dir);
+            // auto a = 0.5*(dirNormal.y() + 1.0);
+            // return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
 
-            return color(0,0,0);
-        }
+        ray scattered;
+        color attenuation;
+        color colorFromEmission = rec.mat->emitted();
 
-        vec3 dirNormal = normalize(r.dir);
-        auto a = 0.5*(dirNormal.y() + 1.0);
-        return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+        if ( !rec.mat->scatter( r, rec, attenuation, scattered ) )
+            return colorFromEmission;
+        
+        color colorFromScatter = attenuation * rayColor( scattered, depth-1, world );
+
+        return colorFromScatter + colorFromEmission;
+
+
     }
 };
 
