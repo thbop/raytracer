@@ -47,7 +47,7 @@ private:
         center = point3(0,0,0);
 
         // Viewport stuff
-        auto focalLength = 2.0;
+        auto focalLength = 1.0;
         auto viewportHeight = 2.0;
         auto viewportWidth = viewportHeight * ((double)imageWidth / imageHeight);
 
@@ -83,26 +83,27 @@ private:
         if (depth <= 0) return color(0,0,0);
 
         HitRecord rec;
-        if ( !world.hit(r, interval(0.001, infinity), rec) ) 
-            return background;
+        if ( !world.hit(r, interval(0.001, infinity), rec) ) {
+            // return background;
             // Or sky color
-            // vec3 dirNormal = normalize(r.dir);
-            // auto a = 0.5*(dirNormal.y() + 1.0);
-            // return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+            vec3 dirNormal = normalize(r.dir);
+            auto a = 0.5*(dirNormal.y() + 1.0);
+            return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+        }
 
         ray scattered;
         color attenuation;
         color colorFromEmission = rec.mat->emitted();
 
-        if ( !rec.mat->scatter( r, rec, attenuation, scattered ) )
+        if ( !rec.mat->scatter( r, rec, attenuation, scattered ) ) {
             return colorFromEmission;
+        }
         
         color colorFromScatter = attenuation * rayColor( scattered, depth-1, world );
 
         return colorFromScatter + colorFromEmission;
-
-
     }
+
 };
 
 #endif

@@ -44,6 +44,45 @@ private:
     double fuzz; // Roughness
 };
 
+class Dielectric : public Material {
+public:
+    Dielectric( double refractionIndex ) : refractionIndex(refractionIndex) {}
+
+    bool scatter( const ray& r_in, const HitRecord& rec, color& attenuation, ray& scattered ) const override {
+        attenuation = color(1.0, 1.0, 1.0); // Let all light through? - Yes, absorb nothing
+        double ri = rec.frontFace ? ( 1.0 / refractionIndex ) : refractionIndex;
+
+        vec3 normalDir = normalize(r_in.dir);
+        double cosTheta = std::fmin( dot(-normalDir, rec.normal), 1.0 );
+        double sinTheta = std::sqrt( 1.0 - cosTheta*cosTheta );
+
+        bool cannotRefract = ri * sinTheta;
+        vec3 dir;
+
+        if ( cannotRefract || reflectance( cosTheta, ri ) > random_double() ) {
+            // Must reflect
+            dir = reflect(normalDir, rec.normal);
+        }
+        else {
+            // Can refract
+            dir = refract( normalDir, rec.normal, ri );
+        }
+
+        scattered = ray( rec.p, dir );
+        return true;
+    }
+
+private:
+    double refractionIndex; // IOR
+
+    static double reflectance( double cosine, double refractionIndex ) {
+        // Schlick's approx
+        auto r0 = ( 1- refractionIndex ) / ( 1 + refractionIndex );
+        r0 = r0*r0;
+        return r0 + (1-r0)*std::pow( ( 1 - cosine ), 5 );
+    }
+};
+
 class Emission : public Material {
 public:
     Emission(const color& emit) : emit(emit) {}
