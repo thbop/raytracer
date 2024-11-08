@@ -10,6 +10,12 @@ public:
     int    imageWidth      = 100;
     int    samplesPerPixel = 10;
     int    maxBounces      = 10;
+
+    double vfov            = 90; // Verticle FOV
+    point3 lookFrom        = point3(0,0,0);
+    point3 lookAt          = point3(0,0,-1);
+    vec3   vup             = vec3(0,1,0);
+
     color  background      = color(0,0,0);
 
     void render( const char* filename, const Hittable& world ) {
@@ -37,28 +43,35 @@ private:
     double pixelSampleScale;
     point3 center;
     point3 pixel00Loc;
-    vec3 pixelDeltaU, pixelDeltaV;
+    vec3   pixelDeltaU, pixelDeltaV;
+    vec3   u, v, w;
 
     void initialize() {
         imageHeight = (int(imageWidth / aspect_ratio) > 1) ? int(imageWidth / aspect_ratio) : 1;
 
         pixelSampleScale = 1.0 / samplesPerPixel;
 
-        center = point3(0,0,0);
+        center = lookFrom;
 
         // Viewport stuff
-        auto focalLength = 1.0;
-        auto viewportHeight = 2.0;
+        auto focalLength = ( lookFrom - lookAt ).length();
+        auto theta = deg2rad( vfov );
+        auto h = std::tan( theta/2 );
+        auto viewportHeight = 2 * h * focalLength;
         auto viewportWidth = viewportHeight * ((double)imageWidth / imageHeight);
 
+        w = normalize( lookFrom - lookAt );
+        u = normalize( cross( vup, w ) );
+        v = cross(w, u);
+
         // Screen mappings
-        auto viewportU = vec3(viewportWidth, 0, 0);
-        auto viewportV = vec3(0, -viewportHeight, 0);
+        auto viewportU = viewportWidth * u;
+        auto viewportV = viewportHeight * -v;
 
         pixelDeltaU = viewportU / imageWidth;
         pixelDeltaV = viewportV / imageHeight;
 
-        auto viewportUpperLeft = center - vec3(0, 0, focalLength) - viewportU/2 - viewportV/2;
+        auto viewportUpperLeft = center - (focalLength * w) - viewportU/2 - viewportV/2;
         pixel00Loc = viewportUpperLeft + 0.5 * ( pixelDeltaU + pixelDeltaV );
     }
 

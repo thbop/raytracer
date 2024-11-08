@@ -56,17 +56,15 @@ public:
         double cosTheta = std::fmin( dot(-normalDir, rec.normal), 1.0 );
         double sinTheta = std::sqrt( 1.0 - cosTheta*cosTheta );
 
-        bool cannotRefract = ri * sinTheta;
+        bool cannotRefract = ri * sinTheta > 1.0;
         vec3 dir;
 
-        if ( cannotRefract || reflectance( cosTheta, ri ) > random_double() ) {
-            // Must reflect
+        if ( cannotRefract || reflectance( cosTheta, ri ) > random_double() ) // Must reflect
             dir = reflect(normalDir, rec.normal);
-        }
-        else {
-            // Can refract
+        
+        else // Can refract
             dir = refract( normalDir, rec.normal, ri );
-        }
+
 
         scattered = ray( rec.p, dir );
         return true;
@@ -77,7 +75,7 @@ private:
 
     static double reflectance( double cosine, double refractionIndex ) {
         // Schlick's approx
-        auto r0 = ( 1- refractionIndex ) / ( 1 + refractionIndex );
+        auto r0 = ( 1 - refractionIndex ) / ( 1 + refractionIndex );
         r0 = r0*r0;
         return r0 + (1-r0)*std::pow( ( 1 - cosine ), 5 );
     }
