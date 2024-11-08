@@ -38,6 +38,9 @@ int main() {
     camera.samplesPerPixel = 100;
     camera.maxBounces      = 50;
 
+    camera.defocusAngle    = 10.0;
+    camera.focusDist       = 3.4;
+
     // camera.background      = color(0.03, 0.03, 0.03);
 
     camera.render("out.ppm", world);

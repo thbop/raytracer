@@ -46,7 +46,7 @@ private:
 
 class Dielectric : public Material {
 public:
-    Dielectric( double refractionIndex ) : refractionIndex(refractionIndex) {}
+    Dielectric( double refractionIndex ) : refractionIndex(refractionIndex) {} // , fuzz(fuzz)
 
     bool scatter( const ray& r_in, const HitRecord& rec, color& attenuation, ray& scattered ) const override {
         attenuation = color(1.0, 1.0, 1.0); // Let all light through? - Yes, absorb nothing
@@ -60,7 +60,7 @@ public:
         vec3 dir;
 
         if ( cannotRefract || reflectance( cosTheta, ri ) > random_double() ) // Must reflect
-            dir = reflect(normalDir, rec.normal);
+            dir = reflect(normalDir, rec.normal); // + ( fuzz * random_normal() );
         
         else // Can refract
             dir = refract( normalDir, rec.normal, ri );
@@ -72,6 +72,7 @@ public:
 
 private:
     double refractionIndex; // IOR
+    // double fuzz;            // Roughness
 
     static double reflectance( double cosine, double refractionIndex ) {
         // Schlick's approx
