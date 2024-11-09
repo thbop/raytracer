@@ -1,4 +1,6 @@
 #include "core.h"
+
+#include "BVH.h"
 #include "camera.h"
 #include "hittable.h"
 #include "hittableList.h"
@@ -18,13 +20,15 @@ int main() {
     auto material_glass  = make_shared<Dielectric>(1.50);
     auto material_bubble = make_shared<Dielectric>(1.00 / 1.50);
 
-    world.add( make_shared<Sphere>(point3(0,0,-1), 0.5, material_blue) );
     world.add( make_shared<Sphere>(point3(1,0,-1), 0.5, material_gold) );
+    world.add( make_shared<Sphere>(point3(0,0,-1), 0.5, material_blue) );
 
     world.add( make_shared<Sphere>(point3(-1,0,-1), 0.5, material_glass) );
     world.add( make_shared<Sphere>(point3(-1,0,-1), 0.4, material_bubble) );
 
     world.add( make_shared<Sphere>(point3(0,-1000.5,-1), 1000, material_dark) );
+
+    world = HittableList(make_shared<BVHNode>(world));
 
     // Camera
     Camera camera;

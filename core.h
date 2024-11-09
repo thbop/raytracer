@@ -21,6 +21,8 @@ inline double random_double() { return std::rand() / ( RAND_MAX + 1.0 ); }
 
 inline double random_double( double min, double max ) { return min + (max-min)*random_double(); }
 
+inline int random_int( int min, int max ) { return (int)random_double( min, max+1 ); }
+
 #include "color.h"
 #include "interval.h"
 #include "ray.h"
