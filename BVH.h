@@ -12,7 +12,11 @@ public:
     BVHNode( HittableList list ) : BVHNode( list.objects, 0, list.objects.size() ) {}
 
     BVHNode( std::vector<shared_ptr<Hittable>>& objects, size_t start, size_t end ) {
-        int axis = random_int(0,2);
+        bbox = AABB::empty;
+        for ( size_t objIndex = start; objIndex < end; objIndex++ )
+            bbox = AABB( bbox, objects[objIndex]->boundingBox() );
+        
+        int axis = bbox.longestAxis();
 
         auto comparator = ( axis == 0 ) ? box_x_compare
                         : ( axis == 1 ) ? box_y_compare
@@ -33,7 +37,6 @@ public:
             right = make_shared<BVHNode>( objects, mid, end );
         }
 
-        bbox = AABB( left->boundingBox(), right->boundingBox() );
     }
 
     bool hit(const ray& r, interval ray_t, HitRecord& rec) const override {

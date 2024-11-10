@@ -49,6 +49,17 @@ public:
         }
         return true;
     }
+
+    int longestAxis() const {
+
+        if (x.size() > y.size()) return x.size() > z.size() ? 0 : 2;
+        else                     return y.size() > z.size() ? 1 : 2;
+    }
+
+    static const AABB empty, universe;
 };
+
+const AABB AABB::empty    = AABB(interval::empty, interval::empty, interval::empty);
+const AABB AABB::universe = AABB(interval::universe, interval::universe, interval::universe);
 
 #endif
