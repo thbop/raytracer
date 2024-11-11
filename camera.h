@@ -21,6 +21,7 @@ public:
 
     color  background      = color(0,0,0);
 
+
     void render( const char* filename, const Hittable& world ) {
         initialize();
         std::ofstream imageFile(filename);
@@ -130,6 +131,7 @@ private:
 
         return colorFromScatter + colorFromEmission;
     }
+
 
 };
 

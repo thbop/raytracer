@@ -31,6 +31,7 @@ public:
         rec.p      = r.at(rec.t);
         vec3 outwardNormal = ( rec.p - center ) / radius;
         rec.setFaceNormal( r, outwardNormal );
+        getUV( outwardNormal, rec.u, rec.v );
         rec.mat = mat;
 
         return true;
@@ -43,6 +44,14 @@ private:
     double radius;
     shared_ptr<Material> mat;
     AABB bbox;
+
+    static void getUV( const point3& p, double& u, double& v ) {
+        auto theta = std::acos(-p.y());
+        auto phi   = std::atan2( -p.z(), p.x() ) + pi;
+        
+        u = phi / (2*pi);
+        v = theta / pi;
+    }
 };
 
 #endif

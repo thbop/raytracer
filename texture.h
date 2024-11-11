@@ -1,6 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include "image.h"
+
 class Texture {
 public:
     virtual ~Texture() = default;
@@ -40,6 +42,28 @@ public:
 private:
     double invScale;
     shared_ptr<Texture> even, odd;
+};
+
+class ImageTexture : public Texture {
+public:
+    ImageTexture( std::string filename ) : image(filename) {}
+
+    color value( double u, double v, const point3& p ) const override {
+        if ( image.height() <= 0 ) return color(0,1,1); // If something else went wrong
+
+        u = interval(0,1).clamp(u);
+        v = 1 - interval(0,1).clamp(v); // Flip V
+
+        auto i = int( u * image.width() );
+        auto j = int( v * image.height() );
+        auto pixel = image.pixelData(i,j);
+
+        auto colorScale = 0.00392156862745098; // 1.0 / 255.0
+        return color( colorScale*pixel[0], colorScale*pixel[1], colorScale*pixel[2] );
+    }
+
+private:
+    Image image;
 };
 
 #endif
