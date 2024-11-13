@@ -20,6 +20,7 @@ int main( int argc, char* argv[] ) {
 
         window.clearScreen();
 
+        window.plotLine( 50, 50, 100, 97, color(1,0,1) );
 
         window.flip();
     }

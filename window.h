@@ -67,9 +67,32 @@ public:
 
     bool isOpen() const { return running; }
 
-    void setPixel(color c, u32 x, u32 y) {
+    void setPixel(u32 x, u32 y, color c) {
         u32 byteColor = convertColor( c );
-        pixels[ y * W_SCREEN_WIDTH + x ] = byteColor;
+        if ( interval(0, W_SCREEN_WIDTH-1).contains(x) && interval(0, W_SCREEN_HEIGHT-1).contains(y) )
+            pixels[ y * W_SCREEN_WIDTH + x ] = byteColor;
+    }
+
+    void plotLine( int x0, int y0, int x1, int y1, color c ) {
+        if ( x0 == x1 ) {
+            if ( y1 > y0 ) for ( int j = y0; j < y1; j++ ) setPixel( x0, j, c );
+            else           for ( int j = y1; j < y0; j++ ) setPixel( x0, j, c );
+            return;
+        }
+        if ( y0 == y1 ) {
+            if ( x1 > x0 ) for ( int i = x0; i < x1; i++ ) setPixel( i, y0, c );
+            else           for ( int i = x1; i < x0; i++ ) setPixel( i, y0, c );
+            return;
+        }
+        
+        if ( std::abs(y1 - y0) < std::abs(x1 - x0) ) {
+            if ( x0 > x1 ) plotLineLow( x1, y1, x0, y0, c );
+            else           plotLineLow( x0, y0, x1, y1, c );
+        }
+        else {
+            if ( y0 > y1 ) plotLineHigh( x1, y1, x0, y0, c );
+            else           plotLineHigh( x0, y0, x1, y1, c );
+        }
     }
 
     void flip() {
@@ -107,6 +130,49 @@ private:
             (u32(floatToByte(c.x())) << 24) |
             (u32(floatToByte(c.y())) << 16) |
             (u32(floatToByte(c.z())) << 8 ) | 0xFF;
+    }
+
+    void plotLineLow( int x0, int y0, int x1, int y1, color c ) {
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int yi = 1;
+        if ( dy < 0 ) {
+            yi = -1;
+            dy = -dy;
+        }
+        int D = (2 * dy) - dx;
+        int y = y0;
+
+        for ( int x = x0; x < x1; x++ ) {
+            setPixel((int)x, (int)y, c);
+            if (D > 0) {
+                y += yi;
+                D += ( 2 * ( dy - dx ) );
+            }
+            else
+                D += 2 * dy;
+        }
+    }
+    void plotLineHigh( int x0, int y0, int x1, int y1, color c ) {
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int xi = 1;
+        if ( dx < 0 ) {
+            xi = -1;
+            dx = -dx;
+        }
+        int D = (2 * dx) - dy;
+        int x = x0;
+
+        for ( int y = y0; y < y1; y++ ) {
+            setPixel((int)x, (int)y, c);
+            if (D > 0) {
+                x += xi;
+                D += ( 2 * ( dx - dy ) );
+            }
+            else
+                D += 2 * dx;
+        }
     }
 };
 
