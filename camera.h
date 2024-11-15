@@ -11,18 +11,64 @@ public:
     int    samplesPerPixel = 10;
     int    maxBounces      = 10;
 
+    int    targetSamples   = samplesPerPixel;
+
     double vfov            = 90; // Verticle FOV
-    point3 lookFrom        = point3(0,0,0);
+    point3 center          = point3(0,0,0);
     point3 lookAt          = point3(0,0,-1);
     vec3   vup             = vec3(0,1,0);
 
+    vec3   u, v, w;
+
     double defocusAngle    = 0;
-    double focusDist      = 10;
+    double focusDist       = 10;
 
     color  background      = color(0,0,0);
 
+    void update( const u8* keystate ) {
+        auto da = 0.0;
 
-    void render( const char* filename, const Hittable& world ) {
+        if ( keystate[SDL_SCANCODE_A] )                                  da = 0.1;
+        if ( keystate[SDL_SCANCODE_D] )                                  da = -0.1;
+        if ( keystate[SDL_SCANCODE_W] )                                  center -= w*0.2;
+        if ( keystate[SDL_SCANCODE_S] )                                  center += w*0.2;
+        if ( keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_E] )  center.e[1] += 0.2;
+        if ( keystate[SDL_SCANCODE_LSHIFT] || keystate[SDL_SCANCODE_Q] ) center.e[1] -= 0.2;
+
+        if ( da ) {
+            auto p0 = center - lookAt;
+            auto u0 = vec3( std::cos( da ), 0.0, std::sin( da ) );
+            auto v0 = vec3( std::cos( da + pi*.5 ), 0.0, std::sin( da + pi*.5 ) );
+
+            center = ( p0.x() * u0 + p0.z() * v0 ) + lookAt + point3( 0.0, center.e[1], 0.0 );
+        }
+        // std::cout << center << "\n";
+
+        w = normalize( center - lookAt );
+        u = normalize( cross( vup, w ) );
+        v = cross(w, u);
+    }
+
+
+    void render( Window& window, Hittable *world ) {
+        initialize();
+        for (int j = 0; j < imageHeight; j++) {
+            for (int i = 0; i < imageWidth; i++) {
+                color pixelColor(0,0,0);
+                for ( int sample = 0; sample < samplesPerPixel; sample++ ) {
+                    ray r = getRay(i, j);
+                    pixelColor += rayColor(r, maxBounces, *world);
+                }
+                double newWt = 1.0/targetSamples;
+                double oldWt = (targetSamples-1.0) * newWt;
+                
+                window.wtAvgPixel(i, j, pixelSampleScale * pixelColor, newWt, oldWt);
+            }
+        }
+    }
+
+
+    void renderImage( const char* filename, Hittable *world ) {
         initialize();
         std::ofstream imageFile(filename);
         imageFile << "P3\n" << imageWidth << " " << imageHeight << "\n255\n";
@@ -33,7 +79,7 @@ public:
                 color pixelColor(0,0,0);
                 for ( int sample = 0; sample < samplesPerPixel; sample++ ) {
                     ray r = getRay(i, j);
-                    pixelColor += rayColor(r, maxBounces, world);
+                    pixelColor += rayColor(r, maxBounces, *world);
                 }
                 writeColor( imageFile, pixelSampleScale * pixelColor );
             }
@@ -45,10 +91,8 @@ public:
 private:
     int imageHeight;
     double pixelSampleScale;
-    point3 center;
     point3 pixel00Loc;
     vec3   pixelDeltaU, pixelDeltaV;
-    vec3   u, v, w;
     vec3   defocusDiskU, defocusDiskV;
 
     void initialize() {
@@ -56,17 +100,12 @@ private:
 
         pixelSampleScale = 1.0 / samplesPerPixel;
 
-        center = lookFrom;
-
         // Viewport stuff
         auto theta = deg2rad( vfov );
         auto h = std::tan( theta/2 );
         auto viewportHeight = 2 * h * focusDist;
         auto viewportWidth = viewportHeight * ((double)imageWidth / imageHeight);
 
-        w = normalize( lookFrom - lookAt );
-        u = normalize( cross( vup, w ) );
-        v = cross(w, u);
 
         // Screen mappings
         auto viewportU = viewportWidth * u;

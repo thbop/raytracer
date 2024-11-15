@@ -40,23 +40,23 @@ int main() {
     world = HittableList(make_shared<BVHNode>(world));
 
     // Camera
-    Camera camera;
+    // CameraRT camera;
 
-    camera.aspect_ratio    = 16.0 / 9.0;
-    camera.imageWidth      = 400;
-    camera.vfov            = 30;
-    camera.lookFrom        = point3(3,1,3);
-    camera.lookAt          = point3(0.7,0,-1);
+    // camera.aspect_ratio    = 16.0 / 9.0;
+    // camera.imageWidth      = 400;
+    // camera.vfov            = 30;
+    // camera.lookFrom        = point3(3,1,3);
+    // camera.lookAt          = point3(0.7,0,-1);
 
-    camera.samplesPerPixel = 100;
-    camera.maxBounces      = 50;
+    // camera.samplesPerPixel = 1;
+    // camera.maxBounces      = 10;
 
-    camera.defocusAngle    = 2.0;
-    camera.focusDist       = (camera.lookAt - camera.lookFrom).length();
+    // camera.defocusAngle    = 2.0;
+    // camera.focusDist       = (camera.lookAt - camera.lookFrom).length();
 
     // camera.background      = color(0.03, 0.03, 0.03);
 
-    camera.render("out.ppm", world);
+    // camera.renderImage("out.ppm", &world);
 
     return 0;
 }
