@@ -6,41 +6,45 @@
 
 class Camera {
 public:
-    double aspect_ratio    = 1.0;
-    int    imageWidth      = 100;
-    int    samplesPerPixel = 10;
-    int    maxBounces      = 10;
+    double aspect_ratio       = 1.0;
+    int    imageWidth         = 100;
+    int    rt_samplesPerPixel = 1;
+    int    rt_maxBounces      = 30;
+    int    samplesPerPixel    = 200;
+    int    maxBounces         = 50;
 
-    int    targetSamples   = samplesPerPixel;
+    int    targetSamples      = rt_samplesPerPixel;
 
-    double vfov            = 90; // Verticle FOV
-    point3 center          = point3(0,0,0);
-    point3 lookAt          = point3(0,0,-1);
-    vec3   vup             = vec3(0,1,0);
+    double vfov               = 90; // Verticle FOV
+    point3 center             = point3(0,0,0);
+    point3 lookAt             = point3(0,0,-1);
+    vec3   vup                = vec3(0,1,0);
 
     vec3   u, v, w;
 
-    double defocusAngle    = 0;
-    double focusDist       = 10;
+    double defocusAngle       = 0;
+    double focusDist          = 10;
 
-    color  background      = color(0,0,0);
+    color  background         = color(0,0,0);
 
     void update( const u8* keystate ) {
-        auto da = 0.0;
+        if ( keystate != NULL ) {
+            auto da = 0.0;
 
-        if ( keystate[SDL_SCANCODE_A] )                                  da = 0.1;
-        if ( keystate[SDL_SCANCODE_D] )                                  da = -0.1;
-        if ( keystate[SDL_SCANCODE_W] )                                  center -= w*0.2;
-        if ( keystate[SDL_SCANCODE_S] )                                  center += w*0.2;
-        if ( keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_E] )  center.e[1] += 0.2;
-        if ( keystate[SDL_SCANCODE_LSHIFT] || keystate[SDL_SCANCODE_Q] ) center.e[1] -= 0.2;
+            if ( keystate[SDL_SCANCODE_A] )                                  da = 0.1;
+            if ( keystate[SDL_SCANCODE_D] )                                  da = -0.1;
+            if ( keystate[SDL_SCANCODE_W] )                                  center -= w*0.2;
+            if ( keystate[SDL_SCANCODE_S] )                                  center += w*0.2;
+            if ( keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_E] )  center.e[1] += 0.2;
+            if ( keystate[SDL_SCANCODE_LSHIFT] || keystate[SDL_SCANCODE_Q] ) center.e[1] -= 0.2;
 
-        if ( da ) {
-            auto p0 = center - lookAt;
-            auto u0 = vec3( std::cos( da ), 0.0, std::sin( da ) );
-            auto v0 = vec3( std::cos( da + pi*.5 ), 0.0, std::sin( da + pi*.5 ) );
+            if ( da ) {
+                auto p0 = center - lookAt;
+                auto u0 = vec3( std::cos( da ), 0.0, std::sin( da ) );
+                auto v0 = vec3( std::cos( da + pi*.5 ), 0.0, std::sin( da + pi*.5 ) );
 
-            center = ( p0.x() * u0 + p0.z() * v0 ) + lookAt + point3( 0.0, center.e[1], 0.0 );
+                center = ( p0.x() * u0 + p0.z() * v0 ) + lookAt + point3( 0.0, center.e[1], 0.0 );
+            }
         }
         // std::cout << center << "\n";
 
@@ -55,14 +59,14 @@ public:
         for (int j = 0; j < imageHeight; j++) {
             for (int i = 0; i < imageWidth; i++) {
                 color pixelColor(0,0,0);
-                for ( int sample = 0; sample < samplesPerPixel; sample++ ) {
+                for ( int sample = 0; sample < rt_samplesPerPixel; sample++ ) {
                     ray r = getRay(i, j);
-                    pixelColor += rayColor(r, maxBounces, *world);
+                    pixelColor += rayColor(r, rt_maxBounces, *world);
                 }
                 double newWt = 1.0/targetSamples;
                 double oldWt = (targetSamples-1.0) * newWt;
                 
-                window.wtAvgPixel(i, j, pixelSampleScale * pixelColor, newWt, oldWt);
+                window.wtAvgPixel(i, j, rt_pixelSampleScale * pixelColor, newWt, oldWt);
             }
         }
     }
@@ -90,7 +94,7 @@ public:
 
 private:
     int imageHeight;
-    double pixelSampleScale;
+    double rt_pixelSampleScale, pixelSampleScale;
     point3 pixel00Loc;
     vec3   pixelDeltaU, pixelDeltaV;
     vec3   defocusDiskU, defocusDiskV;
@@ -99,6 +103,7 @@ private:
         imageHeight = (int(imageWidth / aspect_ratio) > 1) ? int(imageWidth / aspect_ratio) : 1;
 
         pixelSampleScale = 1.0 / samplesPerPixel;
+        rt_pixelSampleScale = 1.0 / rt_samplesPerPixel;
 
         // Viewport stuff
         auto theta = deg2rad( vfov );
@@ -151,11 +156,11 @@ private:
 
         HitRecord rec;
         if ( !world.hit(r, interval(0.001, infinity), rec) ) {
-            // return background;
+            return background;
             // Or sky color
-            vec3 dirNormal = normalize(r.dir);
-            auto a = 0.5*(dirNormal.y() + 1.0);
-            return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+            // vec3 dirNormal = normalize(r.dir);
+            // auto a = 0.5*(dirNormal.y() + 1.0);
+            // return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
         }
 
         ray scattered;

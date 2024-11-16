@@ -6,6 +6,7 @@
 #include "hittable.h"
 #include "hittableList.h"
 #include "material.h"
+#include "quad.h"
 #include "sphere.h"
 #include "texture.h"
 
@@ -20,10 +21,9 @@ int main( int argc, char* argv[] ) {
     camera.aspect_ratio = 16.0 / 9.0;
     camera.imageWidth   = W_SCREEN_WIDTH;
 
-    camera.samplesPerPixel = 1;
-    camera.maxBounces      = 30;
-
     camera.targetSamples   = 10;
+
+    camera.samplesPerPixel = 1024;
 
 
     HittableList world;
@@ -33,8 +33,10 @@ int main( int argc, char* argv[] ) {
     auto material_glass   = make_shared<Dielectric>(1.5);
     auto material_bubble  = make_shared<Dielectric>(1.00 / 1.50);
     auto material_light   = make_shared<Emission>  (color(10,10,10));
+    auto material_lightr  = make_shared<Emission>  (color(10,0,10));
+    auto material_lightb  = make_shared<Emission>  (color(10,3,5));
     auto material_checker = make_shared<Lambertian>(texture_checker);
-    auto material_mirror  = make_shared<Metal>     (color(1.0, 1.0, 1.0), 0.2);
+    auto material_mirror  = make_shared<Metal>     (color(1.0, 1.0, 1.0), 0.1);
     auto material_blue    = make_shared<Lambertian>(color(0.3, 0.7, 0.7));
 
     world.add( make_shared<Sphere>(point3(0,0,-1), 0.5, material_glass) );
@@ -45,9 +47,11 @@ int main( int argc, char* argv[] ) {
     world.add( make_shared<Sphere>(point3(-1,0,-1), 0.5, material_blue) );
     world.add( make_shared<Sphere>(point3(0,-1000.5,-1), 1000, material_checker) );
 
+    world.add( make_shared<Quad>  (point3(-2,3,1), point3(4,0,0), point3(0,0,4), material_light) );
+    world.add( make_shared<Quad>  (point3(0,3,1), point3(2,0,0), point3(0,0,4), material_lightb) );
+
 
     world = HittableList(make_shared<BVHNode>(world));
-
 
 
     while (window.isOpen()) {
@@ -55,6 +59,9 @@ int main( int argc, char* argv[] ) {
 
         const u8* keystate = SDL_GetKeyboardState(NULL);
         camera.update( keystate );
+        if ( keystate[SDL_SCANCODE_R] ) {
+            camera.renderImage("out.ppm", &world);
+        }
 
         // window.clearScreen();
 
