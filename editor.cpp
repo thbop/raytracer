@@ -23,7 +23,7 @@ int main( int argc, char* argv[] ) {
 
     camera.targetSamples   = 10;
 
-    camera.samplesPerPixel = 1024;
+    camera.samplesPerPixel = 4096;
 
 
     HittableList world;
